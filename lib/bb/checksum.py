@@ -140,7 +140,7 @@ class FileChecksumCache(MultiProcessCache):
                 if checksum:
                     checksums.append((pth, checksum))
 
-        checksums.sort(key=operator.itemgetter(1))
+        checksums.sort(key=operator.itemgetter(1, 0))
         return checksums
 
 class RevisionsCache(MultiProcessCache):
