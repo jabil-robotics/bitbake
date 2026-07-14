@@ -26,6 +26,7 @@ from   bb.fetch2.git import Git
 from   bb.fetch2 import runfetchcmd
 from   bb.fetch2 import logger
 from   bb.fetch2 import Fetch
+from   bb.fetch2 import FetchData
 
 class GitSM(Git):
     def supports(self, ud, d):
@@ -202,6 +203,18 @@ class GitSM(Git):
                 raise
 
         Git.download(self, ud, d)
+
+        try_mirrors = d.getVar("__BB_TRY_PREFETCH_MIRRORS")
+        if try_mirrors:
+            def try_mirror_submodule(ud, url, module, modpath, workdir, d):
+                sub_ud = FetchData(url, d)
+                newfetch = Fetch([url], d, cache=False)
+                sub_ud.method.try_mirrors(newfetch, sub_ud, d, try_mirrors)
+
+            new_d = d.createCopy()
+            new_d.delVar("BB_NO_NETWORK")
+            self.call_process_submodules(ud, new_d, self.need_update(ud, d), try_mirror_submodule)
+
         self.call_process_submodules(ud, d, self.need_update(ud, d), download_submodule)
 
     def unpack(self, ud, destdir, d):
