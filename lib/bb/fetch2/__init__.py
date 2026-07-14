@@ -1085,7 +1085,7 @@ def rename_bad_checksum(ud, suffix):
         bb.warn("Renaming %s to %s failed, grep movefile in log.do_fetch to see why" % (ud.localpath, new_localpath))
 
 
-def try_mirror_url(fetch, origud, ud, ld, check = False):
+def try_mirror_url(fetch, origud, ud, ld, check = False, mirrors=None):
     # Return of None or a value means we're finished
     # False means try another url
 
@@ -1115,7 +1115,10 @@ def try_mirror_url(fetch, origud, ud, ld, check = False):
         dldir = ld.getVar("DL_DIR")
 
         if bb.utils.to_boolean(ld.getVar("BB_FETCH_PREMIRRORONLY")):
+            no_network = ld.getVar("BB_NO_NETWORK", "1")
             ld = ld.createCopy()
+            if no_network != "1":
+                ld.setVar("__BB_TRY_PREFETCH_MIRRORS", mirrors)
             ld.setVar("BB_NO_NETWORK", "1")
 
         if origud.mirrortarballs and os.path.basename(ud.localpath) in origud.mirrortarballs and os.path.basename(ud.localpath) != os.path.basename(origud.localpath):
@@ -1190,7 +1193,7 @@ def try_mirrors(fetch, d, origud, mirrors, check = False):
     uris, uds = build_mirroruris(origud, mirrors, ld)
 
     for index, uri in enumerate(uris):
-        ret = try_mirror_url(fetch, origud, uds[index], ld, check)
+        ret = try_mirror_url(fetch, origud, uds[index], ld, check, mirrors)
         if ret:
             return ret
     return None
